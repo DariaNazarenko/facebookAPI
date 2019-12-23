@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Хранилище постов</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <title></title>
+</head>
+<body>
+    <div id="app" class="container">
+        <h2>Хранилище постов</h2>
+        <input type="hidden" name="id" v-model="id" />
+        <div class="form-group">
+            <label for="post">Post:</label>
+            <input class="form-control" v-model="postText" name="post" />
+        </div>
+        <div class="form-group">
+            <label for="url">URL:</label>
+            <input class="form-control" v-model="urlPicture" name="url" />
+        </div>
+        <div class="panel-body">
+            <button v-on:click="PostPost" class="btn btn-sm btn-primary">Сохранить в БД</button>
+            <button v-on:click="GetPosts" class="btn btn-sm btn-primary">Отобразить все посты в БД</button>
+            <button v-on:click="PutPost" v-if="id!=0" class="btn btn-sm btn-primary">Обновить пост в БД</button>
+        </div>
+        <table class="table table-condensed table-striped table-bordered">
+            <thead><tr><th>Id</th><th>Post</th><th>Url pictures</th><th>Data create</th><th>Action</th></tr></thead>
+            <tbody>
+                <tr v-for="post in posts">
+                    <th>{{ post.PostID }}</th>
+                    <th>{{ post.Text }}</th>
+                    <th>{{ post.Picture }}</th>
+                    <th>{{ post.Creation }}</th>
+                    <th>
+                        <a v-on:click="GetPost(post.id)">Изменить</a><br>
+                        <a v-on:click="DeletPost(post.id)">Удалить</a>
+                    </th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>new Vue({
+          el: '#app',
+            data: {
+                posts: null,
+                id: 0,
+                postText: "",
+                urlPicture: ""
+            },
+            methods: {
+                PostPost: function () {
+                    axios.post('https://localhost:44354/api/Posts', {
+                        'PostText': this.Text,
+                        'UrlPicture': this.Picture
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => {
+                            if (response)
+                                alert("Post posted")
+                            else
+                                alert("Error posted" + response.data)
+                            this.Text = "";
+                            this.Picture = ""
+                        });
+                },
+                GetPost: function () {
+                    axios.get('https://localhost:44354/api/Posts')
+                        .then(response => (this.posts = response.data));
+                },
+                GetPost: function (id) {
+                    axios.get('https://localhost:44354/api/Posts/' + id)
+                        .then(response => (
+                            this.postText = response.data.post.Text,
+                            this.urlPicture = response.data.post.Picture,
+                            this.id = response.data.post.PostID));
+                },
+                DeletPost: function (id) {
+                    axios.delete("https://localhost:44354/api/Posts/" + id)
+                        .then(response => (alert("It`s done!")));
+                },
+                PutPost: function (id) {
+                        axios.put("https://localhost:44354/api/Posts/" + id, {
+                            'PostText': this.Text,
+                            'UrlPicture': this.Picture
+                        }, {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(response => {
+                                if (response)
+                                    alert("Post updated")
+                                else
+                                    alert("Error posted" + response.data)
+                                this.PostID = 0
+                            })
+                }
+
+            //},
+            //mounted() {
+            //        axios.get('https://localhost:44393/api/posts')
+            //        .then(response => (this.posts = response.data))
+            }
+        });</script>
+</body>
+</html>
